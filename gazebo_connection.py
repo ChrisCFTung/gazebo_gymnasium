@@ -167,8 +167,12 @@ class GazeboConnection():
 
         self.update_gravity_call()
 
-    def model_config(self, model_name:str, pose=[0.0, 0.0, 0.0, 0.0], 
+    def model_config(self, model_name:str, 
+                     pose=[0.0, 0.0, 0.0], 
                      orientation=[0.0, 0.0, 0.0, 0.0]):
+        """
+        method to adjust the pose of the model in the world
+        """
         gzmodel = ModelState()
         gzmodel.model_name = model_name
         gzmodel.pose.position.x = pose[0]
@@ -181,7 +185,6 @@ class GazeboConnection():
 
         rospy.wait_for_service('/gazebo/set_model_state')
         try:
-            
             self.set_model_state( gzmodel )
         except:
             print("Model setting failed")

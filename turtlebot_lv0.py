@@ -9,7 +9,7 @@ import numpy as np
 import gymnasium as gym
 import tf
 import time
-import os, sys
+import os
 
 
 class TurtlebotLv0(RobotGazeboEnv):
@@ -38,7 +38,7 @@ class TurtlebotLv0(RobotGazeboEnv):
         self.gazebo.pauseSim()
 
         # Action: linear speed, angular speed
-        self.action_space = gym.spaces.Box(np.array([0, -1]),
+        self.action_space = gym.spaces.Box(np.array([-1, -1]),
                                            np.array([1, 1]),
                                            (2,), np.float32)
         
@@ -52,6 +52,10 @@ class TurtlebotLv0(RobotGazeboEnv):
         
         self.observation_space = gym.spaces.Dict({"odom":odom_obs_space,
                                                   "lidar":lidar_obs_space,})
+        
+        # scaling for the robot
+        self.linear_speed = 1
+        self.angular_speed = 1
 
 
     def _odom_callback(self, data):
@@ -96,8 +100,8 @@ class TurtlebotLv0(RobotGazeboEnv):
         self.reset_goal()
 
         # Environment Specific variables
-        self.collision_distance = 0.05
-        self.goal_reach_threshold = 0.1
+        self.collision_distance = 0.15
+        self.goal_reach_threshold = 0.15
         self.collided = False
         self.goal_reached = False
         self.last_goal_dist = self.cal_goal_r()
@@ -139,12 +143,13 @@ class TurtlebotLv0(RobotGazeboEnv):
     def _set_action(self, action):
         """
         publish the action to the robot through cmd_vel
+        then forcing the simulator to run for 0.1s
         """
         cmd_vel_value = Twist()
-        cmd_vel_value.linear.x = action[0]
-        cmd_vel_value.angular.z = action[1]
+        cmd_vel_value.linear.x = (action[0]+1)/2.*self.linear_speed
+        cmd_vel_value.angular.z = action[1]*self.angular_speed
         self.vel_pub.publish(cmd_vel_value)
-        time.sleep(0.1)
+        time.sleep(1./60.)
 
         return
     
@@ -167,8 +172,10 @@ class TurtlebotLv0(RobotGazeboEnv):
     
     def _is_done(self, observations):
         if self.check_collision():
+            rospy.logwarn("Collided.")
             return True
         elif self.reach_goal():
+            rospy.logwarn("Goal Reached.")
             return True
         else:
             return False
@@ -195,12 +202,14 @@ class TurtlebotLv0(RobotGazeboEnv):
         # reset goal position
         self.desired_point =  Point()
         theta = np.random.rand()*2*np.pi
-        self.desired_point.x = (4*np.random.rand()+1)*np.cos(theta)
-        self.desired_point.y = (4*np.random.rand()+1)*np.sin(theta)
+        self.desired_point.x = (3*np.random.rand()+1)*np.cos(theta)
+        self.desired_point.y = (3*np.random.rand()+1)*np.sin(theta)
         MSG = "New goal position set at " +  str(self.desired_point.x) + " , " + str(self.desired_point.y)
         rospy.logwarn(MSG)
 
+        self.gazebo.unpauseSim()
         self.gazebo.model_config("goal_area", [self.desired_point.x, self.desired_point.y, 0])
+        self.gazebo.pauseSim()
 
         return
 
