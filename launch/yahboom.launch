@@ -66,4 +66,13 @@
     <node name="controller_spawner" pkg="controller_manager" type="spawner"
           args="joint_state_controller front_right_controller front_left_controller rear_right_controller rear_left_controller" />
 
+    <!-- Add odometry -->
+    <node pkg="yahboomcar_bringup" type="base_node" name="odometry_publisher">
+        <param name="odom_frame" type="string" value="odom"/>
+        <param name="base_footprint_frame" type="string" value="base_footprint"/>
+        <param name="linear_scale_x" type="double" value="1.0"/>
+        <param name="linear_scale_y" type="double" value="1.0"/>
+        <remap from="/sub_vel" to="/cmd_vel"/>
+        <remap from="/pub_odom" to="/odom"/>
+    </node>
 </launch>

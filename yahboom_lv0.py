@@ -23,7 +23,7 @@ class YahboomLv0(RobotGazeboEnv):
         rospy.init_node("ROSGymnasium")
         subprocess.Popen(["roslaunch","-p", port, launcher_file, "world_name:="+world_file,])
 
-        super(TurtlebotLv0, self).__init__(start_init_physics_parameters=False,
+        super(YahboomLv0, self).__init__(start_init_physics_parameters=False,
                                             reset_world_or_sim="WORLD")
 
         self.gazebo.unpauseSim()
@@ -37,6 +37,8 @@ class YahboomLv0(RobotGazeboEnv):
         self.rr_pub = rospy.Publisher('/rear_right_controller/command', Float64, queue_size=1)
         self.rl_pub = rospy.Publisher('/rear_left_controller/command', Float64, queue_size=1)
 
+        self.vel_pub = rospy.Publisher('/cmd_vel', Twist, queue_size=10)
+        self.raw_vel_pub = rospy.Publisher('/raw_vel', Twist, queue_size=10)
         self.vel_sub = rospy.Subscriber('/cmd_vel', Twist, self._cmdVelCB, queue_size=1)
         self.set_state = rospy.Publisher(
             "gazebo/set_model_state", ModelState, queue_size=10
@@ -87,7 +89,10 @@ class YahboomLv0(RobotGazeboEnv):
             wheel_pub.publish(wv)
 
     def _odom_callback(self, data):
-        self.odom = data
+        if data:
+            self.odom = data
+            print("ODOM RECEIVED")
+            print(self.odom)
 
     def _laser_scan_callback(self, data):
         self.laser_scan = data
@@ -96,6 +101,8 @@ class YahboomLv0(RobotGazeboEnv):
         self.odom = None
         self.laser_scan = None
         try:
+            _init_cmd_vel = Twist()
+            self.vel_pub.publish(_init_cmd_vel)
             self.odom = rospy.wait_for_message("/odom", Odometry, timeout=5.0)
             rospy.logdebug("/odom READY=>")
         except:
