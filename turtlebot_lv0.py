@@ -93,7 +93,7 @@ class TurtlebotLv0(RobotGazeboEnv):
         :return:
         """
         # For Info Purposes
-        self.cumulated_reward = 0.0
+        # self.cumulated_reward = 0.0
         # Set to false Done, because its calculated asyncronously
         self._episode_done = False
 

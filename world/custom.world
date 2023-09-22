@@ -347,7 +347,7 @@
           <transparency>0.5</transparency>
           <geometry>
             <cylinder>
-              <radius>0.5</radius>
+              <radius>0.15</radius>
               <length>1</length>
             </cylinder>
           </geometry>

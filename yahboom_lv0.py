@@ -28,6 +28,15 @@ class YahboomLv0(RobotGazeboEnv):
 
         self.gazebo.unpauseSim()
 
+        # Mecanum wheel kinematic matrix, define robot dimension
+        width = {"fr":0.0845, "fl":0.0845, "rr":0.0845, "rl":0.0845}
+        length = {"fr":0.08, "fl":0.08, "rr":0.08, "rl":0.08}
+        wheel_r = 0.03
+        self.mecanum_mat = 1./wheel_r * np.matrix([[ 1, 1,   (width["fr"] + length["fr"])],
+                                    [ 1, -1, -(width["fl"] + length["fl"])],
+                                    [ 1, -1,  (width["rr"] + length["rr"])],
+                                    [ 1,  1, -(width["rl"] + length["rl"])]])  
+
         # set up some publishers ans subscribers
         print("Set up publisher and subscriber")
 
@@ -38,7 +47,7 @@ class YahboomLv0(RobotGazeboEnv):
         self.rl_pub = rospy.Publisher('/rear_left_controller/command', Float64, queue_size=1)
 
         self.vel_pub = rospy.Publisher('/cmd_vel', Twist, queue_size=10)
-        self.raw_vel_pub = rospy.Publisher('/raw_vel', Twist, queue_size=10)
+        #self.raw_vel_pub = rospy.Publisher('/raw_vel', Twist, queue_size=10)
         self.vel_sub = rospy.Subscriber('/cmd_vel', Twist, self._cmdVelCB, queue_size=1)
         self.set_state = rospy.Publisher(
             "gazebo/set_model_state", ModelState, queue_size=10
@@ -67,16 +76,9 @@ class YahboomLv0(RobotGazeboEnv):
                                                   "lidar":lidar_obs_space,})
         
         # scaling for the robot
-        self.linear_speed = 1
-        self.angular_speed = 1
-
-        # Mecanum wheel kinematic matrix, define robot dimension
-        width = {"fr":0.25, "fl":0.25, "rr":0.25, "rl":0.25}
-        length = {"fr":0.3, "fl":0.3, "rr":0.3, "rl":0.3}
-        self.mecanum_mat = np.matrix([[ 1, 1,   (width["fr"] + length["fr"])],
-                                    [ 1, -1, -(width["fl"] + length["fl"])],
-                                    [ 1, -1,  (width["rr"] + length["rr"])],
-                                    [ 1,  1, -(width["rl"] + length["rl"])]])  
+        self.linear_speed = 0.5 #m/s
+        self.angular_speed = 2 # rad/s
+        
     
     def _cmdVelCB(self, data):
         cmd_vel = np.matrix([data.linear.x, data.linear.y, data.angular.z])
@@ -91,8 +93,8 @@ class YahboomLv0(RobotGazeboEnv):
     def _odom_callback(self, data):
         if data:
             self.odom = data
-            print("ODOM RECEIVED")
-            print(self.odom)
+            #print("ODOM RECEIVED")
+            #print(self.odom)
 
     def _laser_scan_callback(self, data):
         self.laser_scan = data
@@ -128,7 +130,7 @@ class YahboomLv0(RobotGazeboEnv):
         :return:
         """
         # For Info Purposes
-        self.cumulated_reward = 0.0
+        # self.cumulated_reward = 0.0
         # Set to false Done, because its calculated asyncronously
         self._episode_done = False
 
@@ -236,15 +238,16 @@ class YahboomLv0(RobotGazeboEnv):
         
     def reset_goal(self):
         # reset goal position
+        # goal is spwaned with 2 meter
         self.desired_point =  Point()
         theta = np.random.rand()*2*np.pi
-        self.desired_point.x = (3*np.random.rand()+1)*np.cos(theta)
-        self.desired_point.y = (3*np.random.rand()+1)*np.sin(theta)
+        self.desired_point.x = (1*np.random.rand()+1)*np.cos(theta)
+        self.desired_point.y = (1*np.random.rand()+1)*np.sin(theta)
         MSG = "New goal position set at " +  str(self.desired_point.x) + " , " + str(self.desired_point.y)
         rospy.logwarn(MSG)
 
         self.gazebo.unpauseSim()
-        self.gazebo.model_config("goal_area", [self.desired_point.x, self.desired_point.y, 0])
+        self.gazebo.model_config("goal_area", [self.desired_point.x, self.desired_point.y, -0.3])
         self.gazebo.pauseSim()
 
         return
