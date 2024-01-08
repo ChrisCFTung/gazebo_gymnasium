@@ -53,6 +53,7 @@
         <arg name="initial_pose_y" value="$(arg first_tb3_y_pos)"/>
         <arg name="initial_pose_a" value="$(arg first_tb3_yaw)"/>
     </include>
+    <!-- Rename the frame with the group -->
     <param name="amcl/odom_frame_id" value="$(arg first_tb3)/odom"/>
     <param name="amcl/base_frame_id" value="$(arg first_tb3)/base_footprint"/>
 
@@ -66,6 +67,7 @@
       <rosparam file="$(find turtlebot3_navigation)/param/dwa_local_planner_params_$(arg model).yaml" command="load" />
       <remap from="cmd_vel" to="cmd_vel"/>
       <remap from="odom" to="odom"/>
+      <!-- Rename the frame and topics -->
       <param name="local_costmap/global_frame" value="$(arg first_tb3)/odom"/>
       <param name="local_costmap/robot_base_frame" value="$(arg first_tb3)/base_footprint"/>
       <param name="global_costmap/global_frame" value="map"/>
@@ -77,9 +79,9 @@
       <param name="DWAPlannerROS/min_vel_x" value="0.0" if="$(arg move_forward_only)" />
     </node>
 
-    </group>
+  </group>
 
-    <group ns = "$(arg second_tb3)">
+  <group ns = "$(arg second_tb3)">
     <param name="tf_prefix" value="$(arg second_tb3)" />
 
     <node name="spawn_urdf" pkg="gazebo_ros" type="spawn_model" args="-urdf -model $(arg second_tb3) -x $(arg second_tb3_x_pos) -y $(arg second_tb3_y_pos) -z $(arg second_tb3_z_pos) -Y $(arg second_tb3_yaw) -param /robot_description" />
@@ -122,9 +124,9 @@
       <param name="DWAPlannerROS/min_vel_x" value="0.0" if="$(arg move_forward_only)" />
     </node>
 
-    </group>
+  </group>
 
-    <node pkg="rviz" type="rviz" name="rviz" required="true"
-            args="-d /home/chris/ros_ws/gazebo_gymnasium/launch/multiturtle.rviz"/>
+  <node pkg="rviz" type="rviz" name="rviz" required="true"
+          args="-d /home/chris/ros_ws/gazebo_gymnasium/launch/multiturtle.rviz"/>
 
 </launch>
