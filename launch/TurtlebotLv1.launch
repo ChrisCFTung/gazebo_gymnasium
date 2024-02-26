@@ -48,9 +48,9 @@
     <!-- robot -->
     <arg name="model" default="$(env TURTLEBOT3_MODEL)" doc="model type [burger, waffle, waffle_pi]"/>
     <param name="robot_description" command="$(find xacro)/xacro '$(find turtlebot3_description)/urdf/turtlebot3_$(arg model).urdf.xacro'" />
-    <arg name="x" default="0.0" />
-    <arg name="y" default="0.0" />
-    <arg name="z" default="0.0" />
+    <arg name="x" default="-1.0" />
+    <arg name="y" default="1.0" />
+    <arg name="z" default="0.2" />
     <arg name="roll" default="0.0"/>
     <arg name="pitch" default="0.0"/>
     <arg name="yaw" default="0.0"/>
@@ -58,21 +58,6 @@
     args="-urdf -model robot -x $(arg x) -y $(arg y) -z $(arg z) -R $(arg roll) -P $(arg pitch) -Y $(arg yaw) -param robot_description" />
     <node name="joint_state_publisher" pkg="joint_state_publisher" type="joint_state_publisher"/>
     <node name="robot_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher"/>
-
-    <!-- SLAM -->
-    <!-- <arg name="set_base_frame" default="base_footprint"/>
-    <arg name="set_odom_frame" default="odom"/>
-    <arg name="set_map_frame"  default="map"/>
-    <node pkg="gmapping" type="slam_gmapping" name="turtlebot3_slam_gmapping">
-        <param name="scan_frame" value="laser_link"/>
-        <param name="base_frame" value="$(arg set_base_frame)"/>
-        <param name="odom_frame" value="$(arg set_odom_frame)"/>
-        <param name="map_frame"  value="$(arg set_map_frame)"/>
-        <rosparam command="load" file="$(find turtlebot3_slam)/config/gmapping_params.yaml" />
-    </node>
-
-    <node pkg="rviz" type="rviz" name="rviz" required="true"
-        args="-d $(find turtlebot3_slam)/rviz/turtlebot3_gmapping.rviz"/> -->
 
     <!-- Navigation -->
     <arg name="map_file" default="$(find turtlebot3_navigation)/maps/map.yaml"/>
@@ -88,12 +73,35 @@
         <arg name="initial_pose_a" value="$(arg yaw)"/>
     </include>
 
-
     <!-- move_base -->
-    <!-- <include file="$(find turtlebot3_navigation)/launch/move_base.launch">
-        <arg name="model" value="$(arg model)" />
-        <arg name="move_forward_only" value="$(arg move_forward_only)"/>
-    </include> -->
+    <node pkg="move_base" type="move_base" respawn="false" name="move_base" output="screen">
+      <param name="base_local_planner" value="dwa_local_planner/DWAPlannerROS" />
+      <rosparam file="$(find turtlebot3_navigation)/param/costmap_common_params_vo.yaml" command="load" ns="global_costmap" />
+      <rosparam file="$(find turtlebot3_navigation)/param/costmap_common_params_vo.yaml" command="load" ns="local_costmap" />
+      <!-- <rosparam file="$(find turtlebot3_navigation)/param/costmap_common_params_$(arg model).yaml" command="load" ns="global_costmap" /> -->
+      <!-- <rosparam file="$(find turtlebot3_navigation)/param/costmap_common_params_$(arg model).yaml" command="load" ns="local_costmap" /> -->
+      <rosparam file="$(find turtlebot3_navigation)/param/local_costmap_params_vo.yaml" command="load" />
+      <rosparam file="$(find turtlebot3_navigation)/param/global_costmap_params_plugin.yaml" command="load" />
+      <rosparam file="$(find turtlebot3_navigation)/param/move_base_params.yaml" command="load" />
+      <rosparam file="$(find turtlebot3_navigation)/param/dwa_local_planner_params_$(arg model).yaml" command="load" />
+      <remap from="cmd_vel" to="cmd_vel"/>
+      <remap from="odom" to="odom"/>
+      <param name="DWAPlannerROS/min_vel_x" value="0.0" if="$(arg move_forward_only)" />
+    </node>
+
+    <node pkg="temi_vo" type="rgbd_to_vo.py" name="rgbd_to_VO">
+      <param name="rgbd_frame" value="camera_rgb_frame"/>
+      <param name="distance_scale" type="double" value="5000.0"/>
+    </node>
+
+    <!-- Some node for steering the pedestrians-->
+    <node pkg="global_planner" type="planner" name="actor_path_plan">
+      <param name="outline_map" value="false"/>
+      <rosparam file="$(find turtlebot3_navigation)/param/costmap_common_params_vo.yaml" command="load" ns="costmap" />
+      <rosparam file="$(find turtlebot3_navigation)/param/actor_costmap_params.yaml" command="load" />
+    </node>
+
+    <node pkg="gazebo_ros_actor_plugin" type="actor_path.py" name="actor_path"/>
 
     <!-- rviz -->
     <node pkg="rviz" type="rviz" name="rviz" required="true"

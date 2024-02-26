@@ -1,6 +1,6 @@
 import rospy
 import gymnasium as gym
-from gym.utils import seeding
+from gymnasium.utils import seeding
 from .gazebo_connection import GazeboConnection
 
 class RobotGazeboEnv(gym.Env):

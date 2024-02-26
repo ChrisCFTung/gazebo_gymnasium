@@ -11,14 +11,14 @@ import numpy as np
 import gymnasium as gym
 import tf
 import time
-import bezier
+# import bezier
 import os
 
 
 class TurtlebotLv1(RobotGazeboEnv):
     def __init__(self, ):
         port = "11311"
-        launcher_file = os.path.dirname(__file__)+"/launch/MultiTurtleBot.launch"
+        launcher_file = os.path.dirname(__file__)+"/launch/TurtlebotLv1.launch"
         world_file = os.path.dirname(__file__)+"/world/turtlebot3_house.world"
         map_file = os.path.dirname(__file__)+"/world/turtlebot3_house.yaml"
         subprocess.Popen(["roscore", "-p", port])
@@ -33,18 +33,18 @@ class TurtlebotLv1(RobotGazeboEnv):
 
         # set up some publishers ans subscribers
         print("Set up publisher and subscriber")
-        self.vel_pub = rospy.Publisher("/tb3_0/cmd_vel", Twist, queue_size=1)
+        self.vel_pub = rospy.Publisher("/cmd_vel", Twist, queue_size=1)
         self.set_state = rospy.Publisher(
             "gazebo/set_model_state", ModelState, queue_size=10
         )
-        rospy.Subscriber("/tb3_0/odom", Odometry, self._odom_callback)
-        rospy.Subscriber("/tb3_0/amcl_pose", PoseWithCovarianceStamped, self._pose_callback)
-        rospy.Subscriber("/tb3_0/scan", LaserScan, self._laser_scan_callback)
-        rospy.Subscriber("/tb3_0/move_base/local_costmap/costmap", OccupancyGrid, self._grid_callback)
-        rospy.Subscriber("/tb3_0/move_base/local_costmap/costmap_updates", OccupancyGridUpdate, self._gridupdate_callback)
-        rospy.Subscriber("/tb3_0/bumper", ContactsState, self._bumper_callback)
-        #rospy.topics.Subscriber("/tb3_0/move_base/NavfnROS/plan", Path, self._global_plan_callback)
-        self.global_planner = rospy.ServiceProxy("/tb3_0/move_base/NavfnROS/make_plan", GetPlan)
+        rospy.Subscriber("/odom", Odometry, self._odom_callback)
+        rospy.Subscriber("/amcl_pose", PoseWithCovarianceStamped, self._pose_callback)
+        rospy.Subscriber("/scan", LaserScan, self._laser_scan_callback)
+        rospy.Subscriber("/move_base/local_costmap/costmap", OccupancyGrid, self._grid_callback)
+        rospy.Subscriber("/move_base/local_costmap/costmap_updates", OccupancyGridUpdate, self._gridupdate_callback)
+        rospy.Subscriber("/bumper", ContactsState, self._bumper_callback)
+        #rospy.topics.Subscriber("/move_base/NavfnROS/plan", Path, self._global_plan_callback)
+        self.global_planner = rospy.ServiceProxy("/move_base/NavfnROS/make_plan", GetPlan)
 
         self._check_all_systems_ready()
         self.gazebo.pauseSim()
@@ -99,19 +99,19 @@ class TurtlebotLv1(RobotGazeboEnv):
         self.odom = None
         self.laser_scan = None
         try:
-            self.odom = rospy.wait_for_message("/tb3_0/odom", Odometry, timeout=5.0)
-            rospy.logdebug("/tb3_0/odom READY=>")
+            self.odom = rospy.wait_for_message("/odom", Odometry, timeout=5.0)
+            rospy.logdebug("/odom READY=>")
         except:
-            rospy.logerr("/tb3_0/odom not ready yet, retrying for getting odom")
+            rospy.logerr("/odom not ready yet, retrying for getting odom")
 
         try:
-            self.laser_scan = rospy.wait_for_message("/tb3_0/scan", LaserScan, timeout=5.0)
-            rospy.logdebug("/tb3_0/scan READY=>")
+            self.laser_scan = rospy.wait_for_message("/scan", LaserScan, timeout=5.0)
+            rospy.logdebug("/scan READY=>")
         except:
-            rospy.logerr("/tb3_0/scan not ready yet, retrying for getting laser scan")
+            rospy.logerr("/scan not ready yet, retrying for getting laser scan")
 
         try:
-            rospy.wait_for_message("/tb3_0/move_base/local_costmap/costmap", OccupancyGrid, timeout=10.0)
+            rospy.wait_for_message("/move_base/local_costmap/costmap", OccupancyGrid, timeout=10.0)
             rospy.logdebug("costmap ready")
         except:
             rospy.logerr("Can't receive costmap")

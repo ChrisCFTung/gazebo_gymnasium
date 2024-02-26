@@ -7,12 +7,12 @@
   <arg name="first_tb3_x_pos" default="4.07"/>
   <arg name="first_tb3_y_pos" default="-2.5"/>
   <arg name="first_tb3_z_pos" default=" 0.0"/>
-  <arg name="first_tb3_yaw"   default=" 1.57"/>
+  <arg name="first_tb3_yaw"   default=" 3.1416"/>
 
   <arg name="second_tb3_x_pos" default=" -0.8"/>
   <arg name="second_tb3_y_pos" default="-1.2"/>
   <arg name="second_tb3_z_pos" default=" 0.0"/>
-  <arg name="second_tb3_yaw"   default=" 1.57"/>
+  <arg name="second_tb3_yaw"   default=" 0.0"/>
 
   <arg name="third_tb3_x_pos" default=" 0.5"/>
   <arg name="third_tb3_y_pos" default=" 3.0"/>
@@ -60,9 +60,9 @@
 
     <node pkg="move_base" type="move_base" respawn="false" name="move_base" output="screen">
       <param name="base_local_planner" value="dwa_local_planner/DWAPlannerROS" />
-      <rosparam file="$(find turtlebot3_navigation)/param/costmap_common_params_vo.yaml" command="load" ns="global_costmap" />
-      <rosparam file="$(find turtlebot3_navigation)/param/costmap_common_params_vo.yaml" command="load" ns="local_costmap" />
-      <rosparam file="$(find turtlebot3_navigation)/param/local_costmap_params_vo.yaml" command="load" />
+      <rosparam file="$(find turtlebot3_navigation)/param/costmap_common_params_$(arg model).yaml" command="load" ns="global_costmap" />
+      <rosparam file="$(find turtlebot3_navigation)/param/costmap_common_params_$(arg model).yaml" command="load" ns="local_costmap" />
+      <rosparam file="$(find turtlebot3_navigation)/param/local_costmap_params.yaml" command="load" />
       <rosparam file="$(find turtlebot3_navigation)/param/global_costmap_params_plugin.yaml" command="load" />
       <rosparam file="$(find turtlebot3_navigation)/param/move_base_params.yaml" command="load" />
       <rosparam file="$(find turtlebot3_navigation)/param/dwa_local_planner_params_$(arg model).yaml" command="load" />
@@ -75,17 +75,9 @@
       <param name="global_costmap/robot_base_frame" value="$(arg first_tb3)/base_footprint"/>
       <param name="local_costmap/obstacles/scan/sensor_frame" value="$(arg first_tb3)/base_scan"/>
       <param name="local_costmap/obstacles/scan/topic" value="/$(arg first_tb3)/scan"/>
-      <param name="local_costmap/vo/topic" value="/$(arg first_tb3)/vo/pose"/>
-      <param name="local_costmap/vo/dt" value="0.1"/>
-      <param name="local_costmap/vo/nstep" value="10"/>
       <param name="global_costmap/scan/sensor_frame" value="$(arg first_tb3)/base_scan"/>
       <param name="global_costmap/scan/topic" value="/$(arg first_tb3)/scan"/>
       <param name="DWAPlannerROS/min_vel_x" value="0.0" if="$(arg move_forward_only)" />
-    </node>
-
-    <node pkg="temi_vo" type="rgbd_to_vo.py" name="rgbd_to_pseudo_points">
-      <param name="rgbd_frame" value="$(arg first_tb3)/camera_rgb_frame"/>
-      <param name="distance_scale" type="double" value="5000.0"/>
     </node>
 
   </group>
@@ -112,36 +104,26 @@
     <param name="amcl/base_frame_id" value="$(arg second_tb3)/base_footprint"/>
 
 
-    <node pkg="move_base" type="move_base" respawn="false" name="move_base" output="screen">
+    <node pkg="move_base" type="move_base" respawn="false" name="move_base" >
       <param name="base_local_planner" value="dwa_local_planner/DWAPlannerROS" />
-      <rosparam file="$(find turtlebot3_navigation)/param/costmap_common_params_vo.yaml" command="load" ns="global_costmap" />
-      <rosparam file="$(find turtlebot3_navigation)/param/costmap_common_params_vo.yaml" command="load" ns="local_costmap" />
-      <rosparam file="$(find turtlebot3_navigation)/param/local_costmap_params_vo.yaml" command="load" />
+      <rosparam file="$(find turtlebot3_navigation)/param/costmap_common_params_$(arg model).yaml" command="load" ns="global_costmap" />
+      <rosparam file="$(find turtlebot3_navigation)/param/costmap_common_params_$(arg model).yaml" command="load" ns="local_costmap" />
+      <rosparam file="$(find turtlebot3_navigation)/param/local_costmap_params.yaml" command="load" />
       <rosparam file="$(find turtlebot3_navigation)/param/global_costmap_params_plugin.yaml" command="load" />
       <rosparam file="$(find turtlebot3_navigation)/param/move_base_params.yaml" command="load" />
       <rosparam file="$(find turtlebot3_navigation)/param/dwa_local_planner_params_$(arg model).yaml" command="load" />
       <remap from="cmd_vel" to="cmd_vel"/>
       <remap from="odom" to="odom"/>
-      <!-- Rename the frame and topics -->
       <param name="local_costmap/global_frame" value="$(arg second_tb3)/odom"/>
       <param name="local_costmap/robot_base_frame" value="$(arg second_tb3)/base_footprint"/>
       <param name="global_costmap/global_frame" value="map"/>
       <param name="global_costmap/robot_base_frame" value="$(arg second_tb3)/base_footprint"/>
-      <param name="local_costmap/obstacles/scan/sensor_frame" value="$(arg second_tb3)/base_scan"/>
-      <param name="local_costmap/obstacles/scan/topic" value="/$(arg second_tb3)/scan"/>
-      <param name="local_costmap/vo/topic" value="/$(arg second_tb3)/vo/pose"/>
-      <param name="local_costmap/vo/dt" value="0.1"/>
-      <param name="local_costmap/vo/nstep" value="10"/>
+      <param name="local_costmap/scan/sensor_frame" value="$(arg second_tb3)/base_scan"/>
+      <param name="local_costmap/scan/topic" value="/$(arg second_tb3)/scan"/>
       <param name="global_costmap/scan/sensor_frame" value="$(arg second_tb3)/base_scan"/>
       <param name="global_costmap/scan/topic" value="/$(arg second_tb3)/scan"/>
       <param name="DWAPlannerROS/min_vel_x" value="0.0" if="$(arg move_forward_only)" />
     </node>
-
-    <node pkg="temi_vo" type="rgbd_to_vo.py" name="rgbd_to_pseudo_points">
-      <param name="rgbd_frame" value="$(arg second_tb3)/camera_rgb_frame"/>
-      <param name="distance_scale" type="double" value="5000.0"/>
-    </node>
-
 
   </group>
 
